@@ -1,0 +1,49 @@
+name: 🚀 Deploy Docker app on push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker-deploy:
+    name: 🐳 Deploy Docker Container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Get latest code
+        uses: actions/checkout@v4
+
+      - name: 📤 Upload project files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 22
+          source: "./*"
+          target: "/home/sfl5-docker/htdocs/sfl5d.ncgrp.xyz/DevOps4"
+
+      - name: 🐳 Build & restart Docker container on server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 22
+          script: |
+            cd /home/sfl5-docker/htdocs/sfl5d.ncgrp.xyz/DevOps4
+
+            # Stop and remove old container (ignore errors if not exists)
+            docker stop devops31-app || true
+            docker rm devops31-app || true
+
+            # Build latest image
+            docker build -t devops31-app:latest .
+
+            # Run new container
+            docker run -d \
+              --name devops31-app \
+              --restart unless-stopped \
+              -p 8080:80 \
+              devops31-app:latest
