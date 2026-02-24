@@ -21,8 +21,9 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
-          source: "./*"
+          source: "./"
           target: "/home/sfl5-docker/htdocs/sfl5d.ncgrp.xyz/DevOps4"
+          strip_components: 1
 
       - name: 🐳 Build & restart Docker container on server
         uses: appleboy/ssh-action@v1.0.3
@@ -32,18 +33,35 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           script: |
-            cd /home/sfl5-docker/htdocs/sfl5d.ncgrp.xyz/DevOps4
+            set -e
 
-            # Stop and remove old container (ignore errors if not exists)
-            docker stop devops31-app || true
-            docker rm devops31-app || true
+            APP_DIR="/home/sfl5-docker/htdocs/sfl5d.ncgrp.xyz/DevOps4"
+            CONTAINER_NAME="devops31-app"
+            IMAGE_NAME="devops31-app:latest"
+
+            cd "$APP_DIR"
+
+            echo "Current directory:"
+            pwd
+            echo "Files:"
+            ls -la
+
+            # Ensure Dockerfile exists before build
+            if [ ! -f Dockerfile ]; then
+              echo "ERROR: Dockerfile not found in $APP_DIR"
+              exit 1
+            fi
+
+            # Stop and remove old container (safe on first run)
+            docker stop "$CONTAINER_NAME" || true
+            docker rm "$CONTAINER_NAME" || true
 
             # Build latest image
-            docker build -t devops31-app:latest .
+            docker build -t "$IMAGE_NAME" .
 
             # Run new container
             docker run -d \
-              --name devops31-app \
+              --name "$CONTAINER_NAME" \
               --restart unless-stopped \
               -p 3044:80 \
-              devops31-app:latest
+              "$IMAGE_NAME"
