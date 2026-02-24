@@ -45,5 +45,5 @@ jobs:
             docker run -d \
               --name devops31-app \
               --restart unless-stopped \
-              -p 8080:80 \
+              -p 3044:80 \
               devops31-app:latest
