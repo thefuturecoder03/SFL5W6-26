@@ -36,8 +36,8 @@ jobs:
             set -e
 
             APP_DIR="/home/s2140775-node/htdocs/s2140775n.ncgrp.xyz/Week06"
-            CONTAINER_NAME="2140775week06-app"
-            IMAGE_NAME="2140775week06-app:latest"
+            CONTAINER_NAME="s2140775-app"
+            IMAGE_NAME="s2140775-app:latest"
 
             cd "$APP_DIR"
 
